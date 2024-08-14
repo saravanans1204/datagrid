@@ -24,7 +24,7 @@ class _MyCustomTableState extends State<MyCustomTable> {
     },
     {
       'id': 1,
-      'Item': '001/Laptop Charger',
+      'Item': '001/Laptop',
       "UOM": "Each",
       'quantity': 2,
       'price': 14.0,
@@ -508,36 +508,35 @@ class _MyCustomTableState extends State<MyCustomTable> {
     }
   }
 
-void _sortRows() {
-  setState(() {
-    if (selectedValue == "Instruction") {
-      _dataArray.sort((a, b) => _isAscending
-          ? a['price'].compareTo(b['price'])
-          : b['price'].compareTo(a['price']));
-      
-      // Print the sorted _dataArray to the console
-      print("Sorted _dataArray:");
-      _dataArray.forEach((item) {
-        print(item);
-      });
+  void _sortRows() {
+    print(_data);
+    setState(() {
+      if (selectedValue == "Instruction") {
+        _dataArray.sort((a, b) => _isAscending
+            ? a['price'].compareTo(b['price'])
+            : b['price'].compareTo(a['price']));
 
-    } else {
-      _data.sort((a, b) => _isAscending
-          ? a['price'].compareTo(b['price'])
-          : b['price'].compareTo(a['price']));
+        // Print the sorted _dataArray to the console
+        print("Sorted _dataArray:");
+        _dataArray.forEach((item) {
+          print(item);
+        });
+      } else {
+        _data.sort((a, b) => _isAscending
+            ? a['price'].compareTo(b['price'])
+            : b['price'].compareTo(a['price']));
 
-      // Print the sorted _data to the console
-      print("Sorted _data:");
-      _data.forEach((item) {
-        print(item);
-      });
-    }
+        // Print the sorted _data to the console
+        print("Sorted _data:");
+        _data.forEach((item) {
+          print(item);
+        });
+      }
 
-    // Toggle the sorting order
-    _isAscending = !_isAscending;
-  });
-}
-
+      // Toggle the sorting order
+      _isAscending = !_isAscending;
+    });
+  }
 }
 
 class DataRowWidget extends StatefulWidget {
@@ -554,24 +553,31 @@ class _DataRowWidgetState extends State<DataRowWidget> {
   late TextEditingController _priceController;
   late TextEditingController _amountController;
 
-  List<String> suggestions = [
-    '001/Laptop Charger',
-    'Banana',
-    'Cherry',
-    'Date',
-    'Fig',
-    'Grape'
-  ];
   @override
   void initState() {
     super.initState();
-    _quantityController =
-        TextEditingController(text: widget.item['quantity'].toStringAsFixed(2));
-    _priceController =
-        TextEditingController(text: widget.item['price'].toStringAsFixed(2));
+    _initializeControllers();
+  }
+
+  @override
+  void didUpdateWidget(DataRowWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinitialize controllers if the item changes
+    if (widget.item != oldWidget.item) {
+      _initializeControllers();
+    }
+  }
+
+  void _initializeControllers() {
+    _quantityController = TextEditingController(
+      text: widget.item['quantity'].toStringAsFixed(2),
+    );
+    _priceController = TextEditingController(
+      text: widget.item['price'].toStringAsFixed(2),
+    );
     _amountController = TextEditingController(
-        text: (widget.item['quantity'] * widget.item['price'])
-            .toStringAsFixed(2));
+      text: (widget.item['quantity'] * widget.item['price']).toStringAsFixed(2),
+    );
 
     // Add listeners to update the amount when quantity or price changes
     _quantityController.addListener(_updateAmount);
@@ -622,7 +628,6 @@ class _DataRowWidgetState extends State<DataRowWidget> {
       double width = 100,
       TextEditingController? controller,
       Function(String)? onChanged}) {
-    // If a controller is not provided, create a new one with the initial text
     TextEditingController _controller =
         controller ?? TextEditingController(text: text);
 
@@ -654,13 +659,15 @@ class _DataRowWidgetState extends State<DataRowWidget> {
               ? Autocomplete<String>(
                   optionsBuilder: (TextEditingValue textEditingValue) {
                     if (textEditingValue.text.isEmpty) {
-                      return const Iterable<String>.empty();
+                      // Convert suggestions to an Iterable<String>
+                      return suggestions
+                          .map((option) => option['Item'].toString());
                     }
-                    return suggestions.where((String option) {
-                      return option
-                          .toLowerCase()
-                          .contains(textEditingValue.text.toLowerCase());
-                    });
+                    return suggestions
+                        .where((option) => option['Item']
+                            .toLowerCase()
+                            .contains(textEditingValue.text.toLowerCase()))
+                        .map((option) => option['Item'].toString());
                   },
                   onSelected: (String selection) {
                     _controller.text = selection;
